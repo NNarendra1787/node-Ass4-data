@@ -2,6 +2,8 @@ const route = require('express').Router();
 const DataArr=[]
 const bcrypt = require('bcrypt');
 const saltround=10;
+const jwt = require ('jsonwebtoken')
+const secreatKey = process.env.seacreatKey
 
 // Ragister 
 route.post('/signup', (req, res)=>{
@@ -12,7 +14,10 @@ route.post('/signup', (req, res)=>{
         if(ClientDetails.email == ClientData.email){
             return ClientDetails
         }
-   })
+     })
+     if (User) {
+          return res.send("User already exist on this site try to login!! ")
+     }
 
    const HashPassword = bcrypt.hashSync(ClientData.password, saltround)
    const ServerData = {
@@ -21,12 +26,10 @@ route.post('/signup', (req, res)=>{
         password: HashPassword,
         mobile: ClientData.mobile
    }
-   if (User) {
-        return res.send("User already exist on this site try to login!! ")
-   }
+   const token = jwt.sign({userEmail: ClientData.email}, process.env.seacreatKey,{expiresIn: '360m'})
    DataArr.push(ServerData);
    console.log(DataArr);
-   return res.send(DataArr);
+   return res.send({msg: "user ragister", token: token});
 
 })
 
@@ -42,9 +45,10 @@ route.post('/login', (req,res)=>{
    }
    const Validate = bcrypt.compareSync(LoginPage.password, User.password)
    if(Validate){
+     const logtoken = jwt.sign({userEmail: ClientData.email}, secreatKey, {expiresIn: '360m'})
      return res.send("User Login Successfully")
    }
-   return res.send("Pasword doesn't match") 
+   return res.send({mes: "user ragister", logtoken: logtoken}) 
 })
 
 
